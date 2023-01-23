@@ -1,5 +1,6 @@
 import cv2
 import time
+import glob
 
 # Set up the camera
 video = cv2.VideoCapture(0)
@@ -8,8 +9,10 @@ time.sleep(1)
 
 # We compare the first frame to the other frames to detect an object
 first_frame = None
-
+status_list = []
+count = 1
 while True:
+    status = 0
     check, frame = video.read()
     # Converts to grayscale and then blurs the frames since we
     # dont need a precise picture. This will help reduce the data
@@ -44,10 +47,24 @@ while True:
         if cv2.contourArea(contour) < 12000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+        rectangle = cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+        if rectangle.any():
+            status = 1
+            cv2.imwrite(f"images/{count}.png", frame)
+            count += 1
+            all_images = glob.glob("images/*.png")
+            index = int(len(all_images)/2)
+            img_object = all_images[index]
+            
+
+
+    status_list.append(status)
+    status_list = status_list[-2:]
+
+    if status_list[0] == 1 and status_list[1] == 0:
+        print("email was sent")
 
     cv2.imshow("video", frame)
-
 
     # waits for the user to input a key
     key = cv2.waitKey(1)
